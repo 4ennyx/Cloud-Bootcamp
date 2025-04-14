@@ -1,10 +1,10 @@
-version: '3.8'
+version: "3.8"
 services:
   backend-flask:
     environment:
       - FRONTEND_URL:"http://localhost:3000"
       - BACKEND_URL:"http://localhost:4567"
-      
+
       # - FRONTEND_URL: "https://3000-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}"
       # - BACKEND_URL: "https://4567-${GITPOD_WORKSPACE_ID}.${GITPOD_WORKSPACE_CLUSTER_HOST}"
     build: ./backend-flask
@@ -13,6 +13,8 @@ services:
 
     volumes:
       - ./backend-flask:/backend-flask
+    networks:
+      - internal-network
 
   frontend:
     environment:
@@ -25,6 +27,34 @@ services:
 
     volumes:
       - ./frontend-react-js:/frontend-react-js
+    networks:
+      - internal-network
+
+  db:
+    image: postgres:13-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=POSTGRES_PASSWORD
+    ports:
+      - "5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - internal-network
+
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    container_name: dynamodb-local
+    ports:
+      - "8000:8000"
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data
+    working_dir: /home/dynamodblocal
+    networks:
+      - internal-network
+
 networks:
   internal-network:
     driver: bridge
@@ -35,3 +65,5 @@ networks:
 volumes:
   db:
     driver: local
+  dynamodb_data:
+    driver: local  
